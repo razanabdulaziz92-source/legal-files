@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>لوحة الإدارة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f5f0; --surface: #ffffff; --text: #1c2430; --muted: #616b78; --line: #e4dfd4;
+    --brand: #14324a; --brand-2: #1e4a6b; --gold: #b08a3e; --gold-soft: #f3ead6;
+    --accent: #1e4a6b; --accent-ink: #ffffff; --accent-soft: #e6eef5; --hero-ink: #ffffff;
+    --danger: #b3362c; --danger-soft: #fbe9e7; --ok: #2f7a4a; --ok-soft: #e5f3ea;
+    --shadow: 0 1px 2px rgba(20,50,74,.06), 0 6px 20px rgba(20,50,74,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11161c; --surface: #19212a; --text: #e9e6df; --muted: #a1abb6; --line: #2a3440;
+      --brand: #0d1f2e; --brand-2: #163247; --gold: #d4b26a; --gold-soft: #2c2618;
+      --accent: #8dbbe0; --accent-ink: #0d1f2e; --accent-soft: #1d2d3b;
+      --danger: #f08b80; --danger-soft: #3a1f1c; --ok: #7fcf9b; --ok-soft: #1b3324; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #11161c; --surface: #19212a; --text: #e9e6df; --muted: #a1abb6; --line: #2a3440;
+    --brand: #0d1f2e; --brand-2: #163247; --gold: #d4b26a; --gold-soft: #2c2618;
+    --accent: #8dbbe0; --accent-ink: #0d1f2e; --accent-soft: #1d2d3b;
+    --danger: #f08b80; --danger-soft: #3a1f1c; --ok: #7fcf9b; --ok-soft: #1b3324; --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--text); font-family: "Tajawal", "Segoe UI", Tahoma, sans-serif; font-size: 16px; line-height: 1.6; }
+  button, input, select { font: inherit; color: inherit; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+  [hidden] { display: none !important; }
+
+  header.top { background: linear-gradient(160deg, var(--brand), var(--brand-2)); color: var(--hero-ink); }
+  header.top .wrap { display: flex; align-items: center; gap: 12px; padding-top: 16px; padding-bottom: 16px; flex-wrap: wrap; }
+  header.top h1 { font-family: "Amiri", serif; font-size: 26px; margin: 0; flex: 1; }
+  header.top a, header.top button { color: var(--hero-ink); }
+  .who { font-size: 14px; opacity: .85; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px; padding: 8px 16px;
+         border: 1px solid var(--line); background: var(--surface); cursor: pointer; text-decoration: none; font-weight: 500; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .btn.danger { color: var(--danger); border-color: var(--danger); background: transparent; }
+  .btn.ghost { background: transparent; border-color: rgba(255,255,255,.4); }
+  .btn.sm { padding: 4px 10px; font-size: 14px; border-radius: 8px; }
+
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; box-shadow: var(--shadow); margin: 20px 0; }
+  .card h2 { margin: 0 0 8px; font-size: 20px; }
+  .muted { color: var(--muted); }
+  ol.steps { padding-inline-start: 22px; margin: 10px 0 16px; }
+  ol.steps li { margin-bottom: 6px; }
+  label.f { display: block; font-size: 14px; color: var(--muted); margin: 12px 0 4px; }
+  input[type=text], input[type=password], input[type=search], select {
+    width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; outline: none; }
+  input:focus, select:focus { border-color: var(--accent); }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .row > .grow { flex: 1; min-width: 180px; }
+
+  .tabs { display: flex; gap: 6px; margin: 20px 0 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tab { background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 14px; cursor: pointer; color: var(--muted); font-weight: 500; white-space: nowrap; }
+  .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--gold); }
+
+  ul.items { list-style: none; padding: 0; margin: 14px 0; display: grid; gap: 8px; }
+  .it { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+  .it .hd { display: flex; gap: 10px; align-items: center; }
+  .it .t { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+  .it .meta { font-size: 13px; color: var(--muted); }
+  .it.changed { border-color: var(--gold); }
+  .it.deleted { opacity: .5; }
+  .it.deleted .t { text-decoration: line-through; }
+  .it .edit { margin-top: 10px; display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+  .it .edit .full { grid-column: 1 / -1; }
+  @media (max-width: 600px) { .it .edit { grid-template-columns: 1fr; } }
+  .badge { font-size: 12px; border-radius: 999px; padding: 1px 8px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+  .badge.gold { background: var(--gold-soft); color: var(--gold); }
+
+  .savebar { position: sticky; bottom: 0; z-index: 5; background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -4px 16px rgba(0,0,0,.06); }
+  .savebar .wrap { display: flex; gap: 10px; align-items: center; padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap; }
+  .savebar .msg { flex: 1; font-weight: 500; }
+
+  .note { border-radius: 10px; padding: 10px 14px; margin: 12px 0; font-size: 15px; }
+  .note.err { background: var(--danger-soft); color: var(--danger); }
+  .note.ok { background: var(--ok-soft); color: var(--ok); }
+  .note.info { background: var(--accent-soft); color: var(--accent); }
+
+  .drop { border: 2px dashed var(--line); border-radius: 14px; padding: 28px 16px; text-align: center; cursor: pointer; background: var(--bg); }
+  .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+  .up { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .icons { display: flex; gap: 6px; flex-wrap: wrap; }
+  .icons button { width: 38px; height: 38px; border-radius: 10px; border: 1px solid var(--line); background: var(--gold-soft); color: var(--gold); cursor: pointer; display: grid; place-items: center; }
+  .icons button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--accent); }
+  .icons svg { width: 20px; height: 20px; }
+  .more { display: flex; margin: 0 auto 30px; }
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <h1>لوحة الإدارة</h1>
+      <span class="who" id="who"></span>
+      <a class="btn ghost sm" href="./" target="_blank" rel="noopener">فتح الموقع</a>
+      <button class="btn ghost sm" id="logout" type="button" hidden>خروج</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ---------- Login ---------- -->
+    <section class="card" id="login">
+      <h2>الدخول</h2>
+      <p class="muted">الدخول يكون بـ«مفتاح دخول» من حسابك في GitHub. تسوينه مرة وحدة بس، وبعدها يتذكرك المتصفح.</p>
+      <ol class="steps">
+        <li>افتحي <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">صفحة إنشاء المفتاح في GitHub</a> (لازم تكونين مسجلة دخول).</li>
+        <li>في <b>Token name</b> اكتبي أي اسم، مثل: لوحة المكتبة. وفي <b>Expiration</b> اختاري المدة اللي تبينها.</li>
+        <li>في <b>Repository access</b> اختاري <b>Only select repositories</b> ثم اختاري <b>legal-files</b>.</li>
+        <li>في <b>Permissions</b> افتحي <b>Repository permissions</b>، وخلي <b>Contents</b> على <b>Read and write</b>.</li>
+        <li>اضغطي <b>Generate token</b>، وانسخي المفتاح والصقيه هنا.</li>
+      </ol>
+      <label class="f" for="token">مفتاح الدخول</label>
+      <input type="password" id="token" autocomplete="off" placeholder="github_pat_…" dir="ltr">
+      <div class="row" style="margin-top:12px">
+        <label class="row" style="gap:6px"><input type="checkbox" id="remember" checked> تذكرني على هذا الجهاز</label>
+        <span class="grow"></span>
+        <button class="btn primary" id="loginBtn" type="button">دخول</button>
+      </div>
+      <div class="note err" id="loginErr" hidden></div>
+      <p class="muted" style="font-size:14px;margin-bottom:0">المفتاح يُحفظ في متصفحك فقط، ولا يُرسل لأي مكان غير GitHub. لا تشاركينه مع أحد.</p>
+    </section>
+
+    <!-- ---------- App ---------- -->
+    <section id="app" hidden>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" data-tab="files" aria-selected="true">الملفات</button>
+        <button class="tab" role="tab" data-tab="upload" aria-selected="false">إضافة ملفات</button>
+        <button class="tab" role="tab" data-tab="sections" aria-selected="false">الأقسام</button>
+      </div>
+      <div class="note" id="status" hidden></div>
+
+      <!-- Files -->
+      <div data-panel="files">
+        <div class="row" style="margin-top:16px">
+          <input class="grow" type="search" id="q" placeholder="ابحث باسم الملف…" autocomplete="off" aria-label="بحث">
+          <select id="secFilter" style="width:auto;max-width:100%" aria-label="القسم"></select>
+        </div>
+        <p class="muted" id="count" style="margin:10px 0 0;font-size:14px"></p>
+        <ul class="items" id="list"></ul>
+        <button class="btn more" id="more" type="button" hidden>عرض المزيد</button>
+      </div>
+
+      <!-- Upload -->
+      <div data-panel="upload" hidden>
+        <div class="card">
+          <h2>إضافة ملفات PDF</h2>
+          <div class="row">
+            <div class="grow">
+              <label class="f" for="upSec">القسم</label>
+              <select id="upSec"></select>
+            </div>
+            <div class="grow">
+              <label class="f" for="upSub">مجلد فرعي (اختياري)</label>
+              <input type="text" id="upSub" list="subList" placeholder="بدون">
+            </div>
+          </div>
+          <label class="drop" id="drop" style="display:block;margin-top:16px">
+            <input type="file" id="fileIn" accept="application/pdf,.pdf" multiple hidden>
+            <b>اختاري الملفات</b> أو اسحبيها هنا
+            <div class="muted" style="font-size:14px">تقدرين تختارين أكثر من ملف مرة وحدة</div>
+          </label>
+          <ul class="items" id="upList"></ul>
+          <div class="row">
+            <span class="grow muted" id="upInfo"></span>
+            <button class="btn primary" id="upBtn" type="button" disabled>رفع ونشر</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sections -->
+      <div data-panel="sections" hidden>
+        <div class="card">
+          <h2>إضافة قسم</h2>
+          <label class="f" for="newSec">اسم القسم</label>
+          <input type="text" id="newSec" placeholder="مثل: العقود والنماذج">
+          <label class="f">الأيقونة</label>
+          <div class="icons" id="newIcons"></div>
+          <div class="row" style="margin-top:12px"><span class="grow"></span><button class="btn primary" id="addSec" type="button">إضافة</button></div>
+        </div>
+        <p class="muted" style="font-size:14px">الترتيب هنا هو ترتيب الأقسام في الموقع. القسم الفاضي ما يظهر للزوار.</p>
+        <ul class="items" id="secList"></ul>
+      </div>
+    </section>
+    <datalist id="subList"></datalist>
+  </main>
+
+  <div class="savebar" id="savebar" hidden>
+    <div class="wrap">
+      <span class="msg" id="saveMsg"></span>
+      <button class="btn" id="undoAll" type="button">إلغاء التغييرات</button>
+      <button class="btn primary" id="saveBtn" type="button">حفظ ونشر</button>
+    </div>
+  </div>
+
+<script>
+  const REPO = "razanabdulaziz92-source/legal-files";
+  const BRANCH = "main";
+  const API = "https://api.github.com";
+  const LIB = "data/library.json", SECS = "sections.json";
+  const PAGE = 50;
+  const ICONS = [
+    '<path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0L5 7zm14 0l-3 7a3 3 0 0 0 6 0l-3-7z"/>',
+    '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+    '<path d="M14.5 3.5l6 6M12 6l6 6M4 20l8-8M9.5 8.5l6 6M13 3l8 8-3 3-8-8z"/>',
+    '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>',
+    '<circle cx="12" cy="9" r="5"/><path d="M8.5 13 7 21l5-3 5 3-1.5-8"/>',
+    '<path d="M3 7h18M3 12h18M3 17h12"/>',
+    '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>'
+  ];
+  const icon = i => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[i % ICONS.length]}</svg>`;
+
+  const $ = id => document.getElementById(id);
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const norm = s => (s || "").toLowerCase().replace(/[ً-ٰٟـ]/g, "").replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه");
+  const fmtSize = b => !b ? "" : b < 1048576 ? Math.max(1, Math.round(b / 1024)) + " ك.ب" : (b / 1048576).toFixed(1) + " م.ب";
+  const toTitle = n => n.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").trim();
+  const store = {
+    get(k) { try { return localStorage.getItem(k) || sessionStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v, persist) { try { (persist ? localStorage : sessionStorage).setItem(k, v); } catch (e) {} },
+    del(k) { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} }
+  };
+
+  let token = null;
+  let lib = { files: [] };   // as loaded from GitHub
+  let sections = [];         // working copy (editable)
+  let savedSectionsJSON = "[]";
+  // pending changes, applied to the latest data at save time
+  let edits = new Map();     // id -> {t,s,u}
+  let deletes = new Set();   // ids
+  let renames = [];          // [{from,to}]
+  let openId = null, limit = PAGE;
+
+  // ---------- GitHub API ----------
+  async function gh(path, opts = {}) {
+    const r = await fetch(API + path, {
+      ...opts,
+      headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", ...(opts.headers || {}) }
+    });
+    if (!r.ok) { const e = new Error("GitHub " + r.status); e.status = r.status; try { e.body = await r.json(); } catch (x) {} throw e; }
+    return r.status === 204 ? null : r.json();
+  }
+  async function rawFile(path, ref) {
+    const r = await fetch(`${API}/repos/${REPO}/contents/${path}?ref=${ref}`, {
+      headers: { Authorization: "Bearer " + token, Accept: "application/vnd.github.raw+json", "X-GitHub-Api-Version": "2022-11-28" }, cache: "no-store"
+    });
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error("GitHub " + r.status);
+    return r.text();
+  }
+  async function head() { return (await gh(`/repos/${REPO}/git/ref/heads/${BRANCH}`)).object.sha; }
+  async function fetchData(ref) {
+    const [l, s] = await Promise.all([rawFile(LIB, ref), rawFile(SECS, ref)]);
+    return { lib: l ? JSON.parse(l) : { files: [] }, secs: s ? JSON.parse(s) : [] };
+  }
+  function b64FromBytes(bytes) {
+    let s = ""; const CH = 0x8000;
+    for (let i = 0; i < bytes.length; i += CH) s += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+    return btoa(s);
+  }
+  async function blobFromFile(file) {
+    const buf = new Uint8Array(await file.arrayBuffer());
+    const res = await gh(`/repos/${REPO}/git/blobs`, { method: "POST", body: JSON.stringify({ content: b64FromBytes(buf), encoding: "base64" }) });
+    return res.sha;
+  }
+  // Commit: build changes on top of the newest version; retry if someone else committed meanwhile.
+  async function commit(message, build) {
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const parent = await head();
+      const pc = await gh(`/repos/${REPO}/git/commits/${parent}`);
+      const data = await fetchData(parent);
+      const tree = build(data);
+      if (!tree.length) return { data, parent };
+      const t = await gh(`/repos/${REPO}/git/trees`, { method: "POST", body: JSON.stringify({ base_tree: pc.tree.sha, tree }) });
+      const c = await gh(`/repos/${REPO}/git/commits`, { method: "POST", body: JSON.stringify({ message, tree: t.sha, parents: [parent] }) });
+      try {
+        await gh(`/repos/${REPO}/git/refs/heads/${BRANCH}`, { method: "PATCH", body: JSON.stringify({ sha: c.sha, force: false }) });
+        return { data, parent: c.sha };
+      } catch (e) { if (e.status !== 422 && e.status !== 409) throw e; }
+    }
+    throw new Error("conflict");
+  }
+
+  // ---------- Status ----------
+  function status(text, kind = "info") {
+    const s = $("status"); s.hidden = !text; s.className = "note " + kind; s.textContent = text || "";
+    if (text) s.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }
+  function errText(e) {
+    if (e.status === 401) return "المفتاح غير صحيح أو انتهت صلاحيته. اطلعي وادخلي بمفتاح جديد.";
+    if (e.status === 403 || e.status === 404) return "المفتاح ما عنده صلاحية الكتابة على المستودع legal-files. تأكدي إن Contents على Read and write.";
+    if (e.message === "conflict") return "صار تعديل في نفس الوقت من مكان ثاني. جربي الحفظ مرة ثانية.";
+    return "صار خطأ أثناء الاتصال بـ GitHub. جربي مرة ثانية. (" + (e.message || e) + ")";
+  }
+
+  // ---------- Login ----------
+  async function login(t, remember) {
+    token = t;
+    const me = await gh("/user");
+    const repo = await gh(`/repos/${REPO}`);
+    if (!repo.permissions || !repo.permissions.push) { const e = new Error("perm"); e.status = 403; throw e; }
+    store.set("lib-admin-token", t, remember);
+    $("who").textContent = me.login;
+    $("login").hidden = true; $("app").hidden = false; $("logout").hidden = false;
+    await reload();
+  }
+  $("loginBtn").onclick = async () => {
+    const t = $("token").value.trim(); if (!t) return;
+    $("loginErr").hidden = true; $("loginBtn").disabled = true; $("loginBtn").textContent = "جارٍ الدخول…";
+    try { await login(t, $("remember").checked); }
+    catch (e) { token = null; $("loginErr").hidden = false; $("loginErr").textContent = errText(e); }
+    finally { $("loginBtn").disabled = false; $("loginBtn").textContent = "دخول"; }
+  };
+  $("token").addEventListener("keydown", e => { if (e.key === "Enter") $("loginBtn").click(); });
+  $("logout").onclick = () => {
+    if (dirty() && !confirmLeave()) return;
+    store.del("lib-admin-token"); location.reload();
+  };
+  const confirmLeave = () => window.confirm("عندك تغييرات ما انحفظت. تبين تطلعين بدون حفظ؟");
+
+  // ---------- Data ----------
+  async function reload() {
+    status("جارٍ تحميل المكتبة…");
+    const d = await fetchData(await head());
+    lib = d.lib; sections = d.secs.map(s => ({ ...s }));
+    for (const name of new Set(lib.files.map(f => f.s))) if (!sections.some(s => s.name === name)) sections.push({ name });
+    savedSectionsJSON = JSON.stringify(sections);
+    edits.clear(); deletes.clear(); renames = [];
+    status("");
+    renderAll();
+  }
+  const renamed = s => { for (const r of renames) if (s === r.from) s = r.to; return s; };
+  const view = f => ({ ...f, s: renamed(f.s), ...(edits.get(f.id) || {}) });
+  const dirty = () => edits.size || deletes.size || renames.length || JSON.stringify(sections) !== savedSectionsJSON;
+  function renderAll() { fillSelects(); renderList(); renderSections(); renderSave(); }
+  function fillSelects() {
+    const cur = $("secFilter").value;
+    $("secFilter").innerHTML = "";
+    $("secFilter").append(new Option("كل الأقسام", ""));
+    for (const s of sections) $("secFilter").append(new Option(s.name, s.name));
+    $("secFilter").value = sections.some(s => s.name === cur) ? cur : "";
+    const up = $("upSec").value;
+    $("upSec").innerHTML = "";
+    for (const s of sections) $("upSec").append(new Option(s.name, s.name));
+    if (sections.some(s => s.name === up)) $("upSec").value = up;
+    fillSubs();
+  }
+  function fillSubs() {
+    const sec = $("upSec").value;
+    const subs = [...new Set(lib.files.map(view).filter(f => f.s === sec && f.u).map(f => f.u))].sort((a, b) => a.localeCompare(b, "ar"));
+    $("subList").innerHTML = ""; for (const s of subs) $("subList").append(new Option(s));
+  }
+  $("upSec").onchange = fillSubs;
+
+  // ---------- Files list ----------
+  function renderList() {
+    const words = norm($("q").value).split(/\s+/).filter(Boolean);
+    const sec = $("secFilter").value;
+    const rows = lib.files.map(view).filter(f => (!sec || f.s === sec) && (!words.length || words.every(w => norm(f.t + " " + (f.u || "")).includes(w))));
+    $("count").textContent = rows.length.toLocaleString("ar") + " ملف";
+    const ul = $("list"); ul.innerHTML = "";
+    for (const f of rows.slice(0, limit)) ul.append(itemRow(f));
+    $("more").hidden = rows.length <= limit;
+  }
+  function itemRow(f) {
+    const li = el("li", "it");
+    if (edits.has(f.id)) li.classList.add("changed");
+    if (deletes.has(f.id)) li.classList.add("deleted");
+    const hd = el("div", "hd");
+    const box = el("div", "t");
+    box.append(el("div", "", f.t));
+    const meta = el("div", "meta", [f.s, f.u, fmtSize(f.z)].filter(Boolean).join(" · "));
+    box.append(meta);
+    hd.append(box);
+    if (!f.r) hd.append(el("span", "badge gold", "من درايف"));
+    if (deletes.has(f.id)) {
+      const b = el("button", "btn sm", "تراجع"); b.type = "button";
+      b.onclick = () => { deletes.delete(f.id); renderList(); renderSave(); };
+      hd.append(b);
+    } else {
+      const b = el("button", "btn sm", openId === f.id ? "إغلاق" : "تعديل"); b.type = "button";
+      b.onclick = () => { openId = openId === f.id ? null : f.id; renderList(); };
+      hd.append(b);
+    }
+    li.append(hd);
+    if (openId === f.id && !deletes.has(f.id)) li.append(editForm(f));
+    return li;
+  }
+  function editForm(f) {
+    const form = el("div", "edit");
+    const mk = (labelText, input, full) => { const w = el("div", full ? "full" : ""); const l = el("label", "f", labelText); w.append(l, input); form.append(w); return input; };
+    const ti = el("input"); ti.type = "text"; ti.value = f.t; mk("اسم الملف", ti, true);
+    const se = el("select"); for (const s of sections) se.append(new Option(s.name, s.name)); se.value = f.s; mk("القسم", se);
+    const su = el("input"); su.type = "text"; su.value = f.u || ""; su.placeholder = "بدون"; su.setAttribute("list", "subList"); mk("مجلد فرعي", su);
+    const actions = el("div", "full row");
+    const open = el("a", "btn sm", "عرض الملف"); open.target = "_blank"; open.rel = "noopener";
+    open.href = f.r ? new URL(f.r, location.href).href : `https://drive.google.com/file/d/${f.id}/view${f.k ? "?resourcekey=" + encodeURIComponent(f.k) : ""}`;
+    const del = el("button", "btn sm danger", "حذف"); del.type = "button";
+    const sp = el("span", "grow");
+    const ok = el("button", "btn sm primary", "تم"); ok.type = "button";
+    actions.append(open, del, sp, ok);
+    form.append(actions);
+    ok.onclick = () => {
+      const orig = lib.files.find(x => x.id === f.id);
+      const t = ti.value.trim() || orig.t, s = se.value, u = su.value.trim();
+      if (t === orig.t && s === renamed(orig.s) && u === (orig.u || "")) edits.delete(f.id);
+      else edits.set(f.id, { t, s, u });
+      openId = null; renderList(); renderSave();
+    };
+    del.onclick = () => { deletes.add(f.id); openId = null; renderList(); renderSave(); };
+    return form;
+  }
+  $("q").oninput = () => { limit = PAGE; renderList(); };
+  $("secFilter").onchange = () => { limit = PAGE; renderList(); };
+  $("more").onclick = () => { limit += PAGE; renderList(); };
+
+  // ---------- Sections ----------
+  let newIcon = 1;
+  function renderIcons(box, selected, onPick) {
+    box.innerHTML = "";
+    ICONS.forEach((_, i) => {
+      const b = el("button"); b.type = "button"; b.innerHTML = icon(i); b.setAttribute("aria-pressed", String(i === selected));
+      b.setAttribute("aria-label", "أيقونة " + (i + 1)); b.onclick = () => onPick(i); box.append(b);
+    });
+  }
+  function renderSections() {
+    renderIcons($("newIcons"), newIcon, i => { newIcon = i; renderSections(); });
+    const ul = $("secList"); ul.innerHTML = "";
+    const counts = {}; for (const f of lib.files.map(view)) if (!deletes.has(f.id)) counts[f.s] = (counts[f.s] || 0) + 1;
+    sections.forEach((s, i) => {
+      const li = el("li", "it");
+      const hd = el("div", "hd");
+      const ic = el("span"); ic.innerHTML = icon(s.icon ?? i); ic.style.cssText = "width:22px;color:var(--gold);flex:none;display:grid";
+      const nm = el("div", "t"); nm.append(el("div", "", s.name), el("div", "meta", (counts[s.name] || 0).toLocaleString("ar") + " ملف"));
+      const up = el("button", "btn sm", "↑"); up.type = "button"; up.disabled = i === 0; up.setAttribute("aria-label", "لأعلى");
+      const dn = el("button", "btn sm", "↓"); dn.type = "button"; dn.disabled = i === sections.length - 1; dn.setAttribute("aria-label", "لأسفل");
+      const ed = el("button", "btn sm", "تعديل"); ed.type = "button";
+      hd.append(ic, nm, up, dn, ed); li.append(hd);
+      up.onclick = () => { [sections[i - 1], sections[i]] = [sections[i], sections[i - 1]]; renderSections(); renderSave(); };
+      dn.onclick = () => { [sections[i + 1], sections[i]] = [sections[i], sections[i + 1]]; renderSections(); renderSave(); };
+      ed.onclick = () => {
+        if (li.querySelector(".edit")) { li.querySelector(".edit").remove(); return; }
+        const form = el("div", "edit");
+        const w = el("div", "full"); const inp = el("input"); inp.type = "text"; inp.value = s.name; w.append(el("label", "f", "اسم القسم"), inp);
+        const w2 = el("div", "full"); const icBox = el("div", "icons"); let pick = s.icon ?? i;
+        const draw = () => renderIcons(icBox, pick, k => { pick = k; draw(); }); draw();
+        w2.append(el("label", "f", "الأيقونة"), icBox);
+        const act = el("div", "full row");
+        const del = el("button", "btn sm danger", "حذف القسم"); del.type = "button";
+        const ok = el("button", "btn sm primary", "تم"); ok.type = "button";
+        act.append(del, el("span", "grow"), ok);
+        form.append(w, w2, act); li.append(form);
+        del.onclick = () => {
+          if (counts[s.name]) { status(`ما ينفع تحذفين «${s.name}» وفيه ملفات. انقلي ملفاته لقسم ثاني أو احذفيها أول.`, "err"); return; }
+          sections.splice(i, 1); renderAll();
+        };
+        ok.onclick = () => {
+          const name = inp.value.trim();
+          if (!name) return;
+          if (name !== s.name && sections.some(x => x.name === name)) { status("فيه قسم بنفس الاسم.", "err"); return; }
+          if (name !== s.name) {
+            renames.push({ from: s.name, to: name });
+            for (const [id, e] of edits) if (e.s === s.name) e.s = name;
+          }
+          s.name = name; s.icon = pick; status(""); renderAll();
+        };
+      };
+      ul.append(li);
+    });
+  }
+  $("addSec").onclick = () => {
+    const name = $("newSec").value.trim(); if (!name) return;
+    if (sections.some(s => s.name === name)) { status("فيه قسم بنفس الاسم.", "err"); return; }
+    sections.push({ name, icon: newIcon }); $("newSec").value = ""; status(`تمت إضافة «${name}». اضغطي «حفظ ونشر» تحت عشان ينحفظ.`, "ok"); renderAll();
+  };
+
+  // ---------- Save ----------
+  function renderSave() {
+    const n = edits.size + deletes.size + renames.length + (JSON.stringify(sections) !== savedSectionsJSON ? 1 : 0);
+    $("savebar").hidden = !n;
+    const parts = [];
+    if (edits.size) parts.push(edits.size.toLocaleString("ar") + " تعديل");
+    if (deletes.size) parts.push(deletes.size.toLocaleString("ar") + " حذف");
+    if (JSON.stringify(sections) !== savedSectionsJSON) parts.push("تغيير في الأقسام");
+    $("saveMsg").textContent = "تغييرات غير محفوظة: " + parts.join("، ");
+  }
+  function applyPending(data) {
+    const files = data.lib.files.filter(f => !deletes.has(f.id));
+    for (const f of files) {
+      for (const r of renames) if (f.s === r.from) f.s = r.to;
+      const e = edits.get(f.id);
+      if (e) { f.t = e.t; f.s = e.s; if (e.u) f.u = e.u; else delete f.u; }
+    }
+    data.lib.files = files;
+    return data;
+  }
+  function libTree(data, sectionsChanged) {
+    const tree = [{ path: LIB, mode: "100644", type: "blob", content: JSON.stringify(data.lib) }];
+    if (sectionsChanged) tree.push({ path: SECS, mode: "100644", type: "blob", content: JSON.stringify(sections.map(s => ({ name: s.name, icon: s.icon ?? 0 })), null, 1) + "\n" });
+    return tree;
+  }
+  $("saveBtn").onclick = async () => {
+    $("saveBtn").disabled = true; $("saveBtn").textContent = "جارٍ الحفظ…";
+    try {
+      const secChanged = JSON.stringify(sections) !== savedSectionsJSON;
+      await commit("تعديل المكتبة من لوحة الإدارة", data => libTree(applyPending(data), secChanged));
+      await reload();
+      status("تم الحفظ. التغييرات تظهر في الموقع خلال دقيقة أو دقيقتين.", "ok");
+    } catch (e) { status(errText(e), "err"); }
+    finally { $("saveBtn").disabled = false; $("saveBtn").textContent = "حفظ ونشر"; }
+  };
+  $("undoAll").onclick = () => { if (window.confirm("تبين تلغين كل التغييرات اللي ما انحفظت؟")) reload(); };
+  window.addEventListener("beforeunload", e => { if (token && dirty()) { e.preventDefault(); e.returnValue = ""; } });
+
+  // ---------- Upload ----------
+  let picked = [];
+  function renderUploads() {
+    const ul = $("upList"); ul.innerHTML = "";
+    picked.forEach((p, i) => {
+      const li = el("li", "it");
+      const row = el("div", "up");
+      const inp = el("input"); inp.type = "text"; inp.value = p.title; inp.setAttribute("aria-label", "اسم الملف");
+      inp.oninput = () => { p.title = inp.value; };
+      const rm = el("button", "btn sm", "إزالة"); rm.type = "button"; rm.onclick = () => { picked.splice(i, 1); renderUploads(); };
+      row.append(inp, rm); li.append(row, el("div", "meta", p.file.name + " · " + fmtSize(p.file.size)));
+      if (p.file.size > 95 * 1048576) li.append(el("div", "note err", "حجم الملف أكبر من ٩٥ م.ب، وGitHub ما يقبل ملفات بهذا الحجم."));
+      ul.append(li);
+    });
+    const total = picked.reduce((a, p) => a + p.file.size, 0);
+    $("upInfo").textContent = picked.length ? `${picked.length.toLocaleString("ar")} ملف · ${fmtSize(total)}` : "";
+    $("upBtn").disabled = !picked.length || picked.some(p => p.file.size > 95 * 1048576);
+  }
+  function addFiles(list) {
+    for (const file of list) if (/\.pdf$/i.test(file.name) || file.type === "application/pdf") picked.push({ file, title: toTitle(file.name) });
+    renderUploads();
+  }
+  $("fileIn").onchange = e => { addFiles(e.target.files); e.target.value = ""; };
+  const drop = $("drop");
+  drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); addFiles(e.dataTransfer.files); });
+  const safeName = n => n.replace(/[\\/:*?"<>|#%]+/g, " ").replace(/\s+/g, " ").trim() || "file";
+  $("upBtn").onclick = async () => {
+    const sec = $("upSec").value, sub = $("upSub").value.trim();
+    if (!sec) { status("اختاري القسم أول. إذا ما فيه أقسام، أضيفي قسم من تبويب «الأقسام».", "err"); return; }
+    $("upBtn").disabled = true;
+    try {
+      const used = new Set(lib.files.map(f => f.r));
+      const items = [];
+      for (let i = 0; i < picked.length; i++) {
+        const p = picked[i];
+        status(`جارٍ رفع ${(i + 1).toLocaleString("ar")} من ${picked.length.toLocaleString("ar")}: ${p.title}`);
+        let base = safeName(p.title), path = `uploads/${safeName(sec)}/${base}.pdf`, k = 2;
+        while (used.has(path)) path = `uploads/${safeName(sec)}/${base} (${k++}).pdf`;
+        used.add(path);
+        const sha = await blobFromFile(p.file);
+        const entry = { t: p.title.trim() || toTitle(p.file.name), s: sec, id: "up-" + Date.now().toString(36) + "-" + i, z: p.file.size, r: path.split("/").map(encodeURIComponent).join("/") };
+        if (sub) entry.u = sub;
+        items.push({ path, sha, entry });
+      }
+      status("جارٍ النشر…");
+      const secChanged = JSON.stringify(sections) !== savedSectionsJSON;
+      await commit(`إضافة ${items.length} ملف من لوحة الإدارة`, data => {
+        applyPending(data);
+        data.lib.files.unshift(...items.map(x => x.entry));
+        return [...items.map(x => ({ path: x.path, mode: "100644", type: "blob", sha: x.sha })), ...libTree(data, secChanged)];
+      });
+      picked = []; renderUploads();
+      await reload();
+      status(`تم رفع ${items.length.toLocaleString("ar")} ملف في «${sec}». تظهر في الموقع خلال دقيقة أو دقيقتين.`, "ok");
+    } catch (e) { status(errText(e), "err"); }
+    finally { $("upBtn").disabled = !picked.length; }
+  };
+
+  // ---------- Tabs ----------
+  document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+    document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", String(x === t)));
+    document.querySelectorAll("[data-panel]").forEach(p => p.hidden = p.dataset.panel !== t.dataset.tab);
+    status("");
+  });
+
+  // ---------- Start ----------
+  const saved = store.get("lib-admin-token");
+  if (saved) login(saved, true).catch(e => {
+    token = null; store.del("lib-admin-token");
+    $("loginErr").hidden = false; $("loginErr").textContent = errText(e);
+  });
+</script>
+</body>
+</html>
