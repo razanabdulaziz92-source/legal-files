@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الملفات القانونية</title>
+<meta name="description" content="مكتبة مفتوحة للملفات القانونية: تصفح الملفات وحمّلها مجانًا.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --surface: #ffffff;
+    --text: #1f2328;
+    --muted: #5f6670;
+    --line: #e3dfd6;
+    --accent: #1d4e5f;
+    --accent-ink: #ffffff;
+    --accent-soft: #e5eef1;
+    --shadow: 0 1px 2px rgba(0,0,0,.05), 0 4px 14px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171a; --surface: #1c2024; --text: #e8e6e1; --muted: #a2a8ae;
+      --line: #2c3237; --accent: #7fb6c7; --accent-ink: #0d1a1f; --accent-soft: #1f3138;
+      --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171a; --surface: #1c2024; --text: #e8e6e1; --muted: #a2a8ae;
+    --line: #2c3237; --accent: #7fb6c7; --accent-ink: #0d1a1f; --accent-soft: #1f3138;
+    --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Tajawal", "Segoe UI", Tahoma, sans-serif;
+    font-size: 17px; line-height: 1.6;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 0 16px; }
+  header { padding: 40px 0 20px; }
+  h1 { margin: 0 0 6px; font-size: 30px; font-weight: 700; }
+  .sub { margin: 0; color: var(--muted); }
+  .search {
+    position: sticky; top: 0; z-index: 5; background: var(--bg);
+    padding: 12px 0;
+  }
+  .search input {
+    width: 100%; font: inherit; color: var(--text);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px 16px; outline: none;
+  }
+  .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .count { color: var(--muted); font-size: 14px; margin: 4px 2px 12px; }
+  ul.list { list-style: none; margin: 0 0 40px; padding: 0; display: grid; gap: 10px; }
+  .item {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .icon {
+    flex: none; width: 40px; height: 48px; border-radius: 6px;
+    background: var(--accent-soft); color: var(--accent);
+    display: grid; place-items: center; font-size: 12px; font-weight: 700; letter-spacing: .5px;
+  }
+  .meta { flex: 1; min-width: 0; }
+  .name { font-weight: 500; overflow-wrap: anywhere; }
+  .info { color: var(--muted); font-size: 14px; }
+  .actions { display: flex; gap: 8px; flex: none; }
+  .btn {
+    font: inherit; font-size: 15px; cursor: pointer; text-decoration: none;
+    border-radius: 10px; padding: 8px 14px; border: 1px solid var(--accent);
+    display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .btn.ghost { background: transparent; color: var(--accent); }
+  .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+  footer { color: var(--muted); font-size: 14px; text-align: center; padding: 20px 0 40px; }
+  @media (max-width: 560px) {
+    .item { flex-wrap: wrap; }
+    .actions { width: 100%; }
+    .actions .btn { flex: 1; justify-content: center; }
+  }
+
+  /* Viewer */
+  .viewer {
+    position: fixed; inset: 0; z-index: 20; background: var(--bg);
+    display: none; flex-direction: column;
+  }
+  .viewer.open { display: flex; }
+  .vbar {
+    display: flex; align-items: center; gap: 8px; padding: 10px 16px;
+    background: var(--surface); border-bottom: 1px solid var(--line);
+  }
+  .vtitle { flex: 1; min-width: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vbody { flex: 1; overflow: auto; padding: 16px 8px; }
+  .vbody canvas {
+    display: block; margin: 0 auto 12px; max-width: 100%; height: auto;
+    background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.15);
+  }
+  .vstatus { text-align: center; color: var(--muted); padding: 30px 0; }
+  .zoom { display: flex; gap: 4px; }
+  .zoom .btn { padding: 6px 12px; }
+  @media (max-width: 560px) { .zoom { display: none; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>الملفات القانونية</h1>
+      <p class="sub">تصفح الملفات مباشرة من المتصفح أو حمّلها على جهازك. الموقع مفتوح للجميع ولا يحتاج تسجيل دخول.</p>
+    </header>
+
+    <div class="search">
+      <input id="q" type="search" placeholder="ابحث باسم الملف…" autocomplete="off" aria-label="بحث">
+    </div>
+    <div class="count" id="count"></div>
+    <ul class="list" id="list"></ul>
+  </div>
+
+  <footer>الملفات القانونية</footer>
+
+  <div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="vtitle">
+    <div class="vbar">
+      <button class="btn ghost" id="close" type="button">رجوع</button>
+      <div class="vtitle" id="vtitle"></div>
+      <div class="zoom">
+        <button class="btn ghost" id="zout" type="button" aria-label="تصغير">−</button>
+        <button class="btn ghost" id="zin" type="button" aria-label="تكبير">+</button>
+      </div>
+      <a class="btn primary" id="vdl" download>تحميل</a>
+    </div>
+    <div class="vbody" id="vbody"></div>
+  </div>
+
+<script src="lib/pdf.min.js"></script>
+<script>
+  if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "lib/pdf.worker.min.js";
+
+  const listEl = document.getElementById("list");
+  const countEl = document.getElementById("count");
+  const qEl = document.getElementById("q");
+  let files = [];
+
+  const norm = s => s.toLowerCase()
+    .replace(/[ً-ٰٟ]/g, "")      // تشكيل
+    .replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه");
+
+  function fmtSize(b) {
+    if (!b) return "";
+    if (b < 1024 * 1024) return Math.max(1, Math.round(b / 1024)) + " ك.ب";
+    return (b / 1024 / 1024).toFixed(1) + " م.ب";
+  }
+
+  function render() {
+    const q = norm(qEl.value.trim());
+    const shown = files.filter(f => !q || norm(f.title).includes(q));
+    listEl.innerHTML = "";
+    if (!files.length) {
+      listEl.innerHTML = '<li class="empty">لا توجد ملفات بعد.</li>';
+    } else if (!shown.length) {
+      listEl.innerHTML = '<li class="empty">لا توجد نتائج مطابقة.</li>';
+    }
+    for (const f of shown) {
+      const li = document.createElement("li");
+      li.className = "item";
+      li.innerHTML = `
+        <div class="icon">PDF</div>
+        <div class="meta"><div class="name"></div><div class="info"></div></div>
+        <div class="actions">
+          <button class="btn primary" type="button">عرض</button>
+          <a class="btn ghost" download>تحميل</a>
+        </div>`;
+      li.querySelector(".name").textContent = f.title;
+      li.querySelector(".info").textContent = [fmtSize(f.size), f.date].filter(Boolean).join(" · ");
+      li.querySelector("button").onclick = () => openViewer(f);
+      const a = li.querySelector("a");
+      a.href = f.url;
+      a.setAttribute("download", f.file);
+      listEl.appendChild(li);
+    }
+    countEl.textContent = files.length
+      ? (q ? `${shown.length} من ${files.length} ملف` : `${files.length} ملف`)
+      : "";
+  }
+
+  // ---------- Viewer ----------
+  const viewer = document.getElementById("viewer");
+  const vbody = document.getElementById("vbody");
+  let doc = null, scale = 1, renderToken = 0;
+
+  async function renderPages() {
+    const token = ++renderToken;
+    vbody.innerHTML = "";
+    const width = Math.min(vbody.clientWidth - 16, 900);
+    const dpr = window.devicePixelRatio || 1;
+    for (let i = 1; i <= doc.numPages; i++) {
+      if (token !== renderToken) return;
+      const page = await doc.getPage(i);
+      const base = page.getViewport({ scale: 1 });
+      const s = (width / base.width) * scale;
+      const vp = page.getViewport({ scale: s * dpr });
+      const c = document.createElement("canvas");
+      c.width = vp.width; c.height = vp.height;
+      c.style.width = (vp.width / dpr) + "px";
+      vbody.appendChild(c);
+      await page.render({ canvasContext: c.getContext("2d"), viewport: vp }).promise;
+    }
+  }
+
+  async function openViewer(f, push = true) {
+    document.getElementById("vtitle").textContent = f.title;
+    const dl = document.getElementById("vdl");
+    dl.href = f.url; dl.setAttribute("download", f.file);
+    viewer.classList.add("open");
+    document.body.style.overflow = "hidden";
+    if (push) history.pushState({ file: f.file }, "", "#" + encodeURIComponent(f.file));
+    vbody.innerHTML = '<div class="vstatus">جارٍ تحميل الملف…</div>';
+    scale = 1;
+    try {
+      doc = await pdfjsLib.getDocument({
+        url: f.url, isEvalSupported: false
+      }).promise;
+      await renderPages();
+    } catch (e) {
+      vbody.innerHTML = '<div class="vstatus">تعذّر عرض الملف. يمكنك تحميله بزر «تحميل».</div>';
+    }
+  }
+
+  function closeViewer() {
+    renderToken++;
+    viewer.classList.remove("open");
+    document.body.style.overflow = "";
+    vbody.innerHTML = "";
+    doc = null;
+  }
+
+  document.getElementById("close").onclick = () => history.length > 1 && location.hash ? history.back() : closeViewer();
+  document.getElementById("zin").onclick = () => { if (doc) { scale = Math.min(scale + .25, 3); renderPages(); } };
+  document.getElementById("zout").onclick = () => { if (doc) { scale = Math.max(scale - .25, .5); renderPages(); } };
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && viewer.classList.contains("open")) document.getElementById("close").click(); });
+
+  function fromHash() {
+    const name = decodeURIComponent(location.hash.slice(1));
+    const f = name && files.find(x => x.file === name);
+    if (f) openViewer(f, false); else if (viewer.classList.contains("open")) closeViewer();
+  }
+  window.addEventListener("popstate", fromHash);
+
+  qEl.addEventListener("input", render);
+
+  // يقرأ قائمة ملفات مجلد files مباشرة من GitHub، فيكفي رفع ملف PDF للمجلد ليظهر في الموقع.
+  const REPO = "razanabdulaziz92-source/legal-files";
+  const toTitle = n => n.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").trim();
+
+  async function loadList() {
+    try {
+      const r = await fetch(`https://api.github.com/repos/${REPO}/contents/files`, { cache: "no-cache" });
+      if (!r.ok) throw 0;
+      const data = await r.json();
+      return data.filter(x => x.type === "file" && /\.pdf$/i.test(x.name))
+                 .map(x => ({ file: x.name, size: x.size }));
+    } catch (e) {
+      const r = await fetch("files.json", { cache: "no-cache" });
+      return r.json();
+    }
+  }
+
+  loadList()
+    .then(data => {
+      files = data.map(f => ({
+        ...f,
+        title: f.title || toTitle(f.file),
+        url: "files/" + encodeURIComponent(f.file)
+      })).sort((a, b) => a.title.localeCompare(b.title, "ar"));
+      render();
+      fromHash();
+    })
+    .catch(() => { listEl.innerHTML = '<li class="empty">تعذّر تحميل قائمة الملفات.</li>'; });
+</script>
+</body>
+</html>
