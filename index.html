@@ -299,6 +299,7 @@
   }
   const driveKey = f => f.key ? "&resourcekey=" + encodeURIComponent(f.key) : "";
   const viewUrl = f => f.local || `https://drive.google.com/file/d/${f.id}/preview?${driveKey(f).slice(1)}`;
+  const track = (kind, f) => { try { window.goatcounter && window.goatcounter.count && window.goatcounter.count({ path: kind + ": " + f.title, title: f.section || "", event: true }); } catch (e) {} };
   const dlUrl = f => f.local || `https://drive.google.com/uc?export=download&id=${f.id}${driveKey(f)}`;
 
   function renderSections() {
@@ -372,6 +373,7 @@
       const a = li.querySelector("a");
       a.href = dlUrl(f);
       if (f.local) a.setAttribute("download", f.title + ".pdf");
+      a.addEventListener("click", () => track("تحميل", f));
       frag.appendChild(li);
     }
     listEl.appendChild(frag);
@@ -410,7 +412,8 @@
   }
   async function openViewer(f, push = true) {
     $("vtitle").textContent = f.title;
-    const dl = $("vdl"); dl.href = dlUrl(f);
+    const dl = $("vdl"); dl.href = dlUrl(f); dl.onclick = () => track("تحميل", f);
+    track("فتح", f);
     if (f.local) dl.setAttribute("download", f.title + ".pdf"); else dl.removeAttribute("download");
     viewer.classList.add("open"); document.body.style.overflow = "hidden";
     if (push) history.pushState(null, "", "#f=" + encodeURIComponent(f.key_));
@@ -487,5 +490,6 @@
     renderSections(); renderList(); fromHash();
   }).catch(() => { listEl.innerHTML = '<li class="empty">تعذّر تحميل قائمة الملفات. حاول تحديث الصفحة.</li>'; });
 </script>
+<script data-goatcounter="https://razanlib.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
