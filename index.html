@@ -397,7 +397,7 @@
     vbody.innerHTML = '<div class="vstatus">جارٍ فتح الملف…</div>';
     scale = 1;
     try {
-      doc = await pdfjsLib.getDocument({ url: f.local, isEvalSupported: false }).promise;
+      doc = await pdfjsLib.getDocument({ url: f.local, isEvalSupported: false, cMapUrl: "lib/cmaps/", cMapPacked: true, standardFontDataUrl: "lib/standard_fonts/" }).promise;
       await renderPages();
     } catch (e) {
       vbody.innerHTML = '<div class="vstatus">تعذّر عرض الملف هنا. يمكنك تحميله بزر «تحميل».</div>';
@@ -423,6 +423,7 @@
     if (s !== current) setSection(sections.some(x => x.name === s) ? s : "", false);
   }
   window.addEventListener("popstate", fromHash);
+  window.addEventListener("hashchange", fromHash);
 
   // ---------- Data ----------
   const getJSON = (u, fallback) => fetch(u, { cache: "no-cache" }).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
