@@ -162,6 +162,16 @@
   .vtitle { flex: 1; min-width: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .vbody { flex: 1; overflow: auto; padding: 16px 8px; }
   .vbody canvas { display: block; margin: 0 auto 12px; max-width: 100%; height: auto; background: #fff; box-shadow: 0 1px 6px rgba(0,0,0,.15); }
+  .vbody.frame { padding: 0; overflow: hidden; }
+  .vbody iframe { width: 100%; height: 100%; border: 0; display: block; background: #fff; }
+  .subs { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
+  .chip {
+    font-size: 14px; cursor: pointer; border-radius: 999px; padding: 5px 14px;
+    background: var(--surface); color: var(--text); border: 1px solid var(--line);
+  }
+  .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .more { display: flex; margin: -30px auto 48px; }
+  .sub { color: var(--muted); }
   .vstatus { text-align: center; color: var(--muted); padding: 30px 0; }
   .zoom { display: flex; gap: 4px; }
   .zoom .btn { padding: 6px 12px; }
@@ -176,7 +186,7 @@
         <span>المكتبة القانونية</span>
       </div>
       <h1>الملفات القانونية</h1>
-      <p>أنظمة ولوائح وعقود ونماذج وأحكام، متاحة للجميع. تصفح أي ملف مباشرة من المتصفح أو حمّله على جهازك بدون تسجيل دخول.</p>
+      <p>أكثر من ١٧٠٠ ملف قانوني: أنظمة ولوائح وأحكام قضائية وبحوث، متاحة للجميع. تصفح أي ملف مباشرة من المتصفح أو حمّله على جهازك بدون تسجيل دخول.</p>
       <div class="stats"><div><b id="stFiles">0</b> ملف</div><div><b id="stSecs">0</b> قسم</div></div>
     </div>
   </section>
@@ -196,7 +206,9 @@
       <h2 class="title" id="listTitle">جميع الملفات</h2>
       <div class="count"><span id="count"></span> <button class="clear" id="clear" type="button" hidden>عرض الكل</button></div>
     </div>
+    <div class="subs" id="subs" hidden></div>
     <ul class="list" id="list"><li class="empty">جارٍ تحميل الملفات…</li></ul>
+    <button class="btn ghost more" id="more" type="button" hidden>عرض المزيد</button>
   </main>
 
   <footer>المكتبة القانونية · جميع الملفات متاحة مجانًا للتصفح والتحميل</footer>
@@ -218,9 +230,13 @@
 <script>
   if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "lib/pdf.worker.min.js";
 
-  // كل قسم = مجلد داخل مجلد files. ترتيب الأقسام ووصفها في sections.json
+  // مصادر البيانات:
+  //  - data/library.json : فهرس المكتبة (الملف إما محفوظ في الموقع "r" أو يُعرض من Google Drive "id")
+  //  - مجلد files/ في GitHub : أي ملف يُرفع يدويًا داخل files/اسم القسم/ يظهر تلقائيًا
+  //  - sections.json : ترتيب الأقسام وأيقوناتها
   const REPO = "razanabdulaziz92-source/legal-files";
-  const OTHER = "ملفات عامة";
+  const OTHER = "ملفات متنوعة";
+  const PAGE = 60;
 
   const ICONS = [
     '<path d="M12 3v18M7 21h10M5 7h14M5 7l-3 7a3 3 0 0 0 6 0L5 7zm14 0l-3 7a3 3 0 0 0 6 0l-3-7z"/>',
@@ -228,26 +244,31 @@
     '<path d="M14.5 3.5l6 6M12 6l6 6M4 20l8-8M9.5 8.5l6 6M13 3l8 8-3 3-8-8z"/>',
     '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>',
     '<circle cx="12" cy="9" r="5"/><path d="M8.5 13 7 21l5-3 5 3-1.5-8"/>',
-    '<path d="M3 7h18M3 12h18M3 17h12"/>'
+    '<path d="M3 7h18M3 12h18M3 17h12"/>',
+    '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>'
   ];
   const icon = i => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[i % ICONS.length]}</svg>`;
   const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
   const DL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>';
 
   const $ = id => document.getElementById(id);
-  const listEl = $("list"), secEl = $("sections"), qEl = $("q");
-  let files = [], sections = [], current = "";
+  const listEl = $("list"), secEl = $("sections"), qEl = $("q"), subsEl = $("subs"), moreEl = $("more");
+  let files = [], sections = [], current = "", currentSub = "", limit = PAGE;
 
   const norm = s => s.toLowerCase()
     .replace(/[ً-ٰٟـ]/g, "")
     .replace(/[أإآ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه");
   const toTitle = n => n.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").trim();
   const enc = p => p.split("/").map(encodeURIComponent).join("/");
+  const topOf = u => (u || "").split(" / ")[0];
   function fmtSize(b) {
     if (!b) return "";
     if (b < 1024 * 1024) return Math.max(1, Math.round(b / 1024)) + " ك.ب";
     return (b / 1024 / 1024).toFixed(1) + " م.ب";
   }
+  const driveKey = f => f.key ? "&resourcekey=" + encodeURIComponent(f.key) : "";
+  const viewUrl = f => f.local || `https://drive.google.com/file/d/${f.id}/preview?${driveKey(f).slice(1)}`;
+  const dlUrl = f => f.local || `https://drive.google.com/uc?export=download&id=${f.id}${driveKey(f)}`;
 
   function renderSections() {
     secEl.innerHTML = "";
@@ -259,29 +280,48 @@
       b.innerHTML = `<div class="ic">${icon(s.icon ?? i)}</div><div class="nm"></div><div class="ct"></div>`;
       b.querySelector(".nm").textContent = s.name;
       b.querySelector(".ct").textContent = n ? `${n} ملف` : "قريبًا";
-      if (s.desc) b.title = s.desc;
       b.onclick = () => setSection(current === s.name ? "" : s.name);
       secEl.appendChild(b);
     });
-    $("stFiles").textContent = files.length;
-    $("stSecs").textContent = sections.length;
+    $("stFiles").textContent = files.length.toLocaleString("ar");
+    $("stSecs").textContent = sections.length.toLocaleString("ar");
+  }
+
+  function renderSubs() {
+    const subs = current ? [...new Set(files.filter(f => f.section === current && f.sub).map(f => topOf(f.sub)))] : [];
+    subsEl.hidden = subs.length < 2;
+    subsEl.innerHTML = "";
+    if (subsEl.hidden) return;
+    subs.sort((a, b) => a.localeCompare(b, "ar", { numeric: true }));
+    for (const name of ["", ...subs]) {
+      const c = document.createElement("button");
+      c.type = "button"; c.className = "chip";
+      c.textContent = name || "الكل";
+      c.setAttribute("aria-pressed", String(currentSub === name));
+      c.onclick = () => { currentSub = name; limit = PAGE; renderSubs(); renderList(); };
+      subsEl.appendChild(c);
+    }
   }
 
   function renderList() {
     const q = norm(qEl.value.trim());
+    const words = q.split(/\s+/).filter(Boolean);
     const shown = files.filter(f =>
       (!current || f.section === current) &&
-      (!q || norm(f.title).includes(q) || norm(f.section).includes(q)));
+      (!currentSub || topOf(f.sub) === currentSub) &&
+      words.every(w => f.n.includes(w)));
     $("listTitle").textContent = current || (q ? "نتائج البحث" : "جميع الملفات");
     $("clear").hidden = !current && !q;
-    $("count").textContent = files.length ? `${shown.length} ملف` : "";
+    $("count").textContent = files.length ? `${shown.length.toLocaleString("ar")} ملف` : "";
     listEl.innerHTML = "";
+    moreEl.hidden = shown.length <= limit;
     if (!shown.length) {
       const msg = !files.length ? "لا توجد ملفات بعد." : q ? "لا توجد نتائج مطابقة لبحثك." : "لا توجد ملفات في هذا القسم بعد.";
       listEl.innerHTML = `<li class="empty">${msg}</li>`;
       return;
     }
-    for (const f of shown) {
+    const frag = document.createDocumentFragment();
+    for (const f of shown.slice(0, limit)) {
       const li = document.createElement("li");
       li.className = "item";
       li.innerHTML = `
@@ -289,27 +329,33 @@
         <div class="meta"><div class="name"></div><div class="info"></div></div>
         <div class="actions">
           <button class="btn primary" type="button">${EYE}عرض</button>
-          <a class="btn ghost">${DL}تحميل</a>
+          <a class="btn ghost" target="_blank" rel="noopener">${DL}تحميل</a>
         </div>`;
       li.querySelector(".name").textContent = f.title;
       const info = li.querySelector(".info");
-      if (!current) { const t = document.createElement("span"); t.className = "tag"; t.textContent = f.section; info.appendChild(t); }
-      const sz = document.createElement("span"); sz.textContent = fmtSize(f.size); info.appendChild(sz);
+      const add = (cls, txt) => { if (!txt) return; const t = document.createElement("span"); t.className = cls; t.textContent = txt; info.appendChild(t); };
+      if (!current) add("tag", f.section);
+      add("sub", f.sub);
+      add("", fmtSize(f.size));
       li.querySelector("button").onclick = () => openViewer(f);
       const a = li.querySelector("a");
-      a.href = f.url; a.setAttribute("download", f.file);
-      listEl.appendChild(li);
+      a.href = dlUrl(f);
+      if (f.local) a.setAttribute("download", f.title + ".pdf");
+      frag.appendChild(li);
     }
+    listEl.appendChild(frag);
   }
+  moreEl.onclick = () => { limit += PAGE; renderList(); };
 
   function setSection(name, push = true) {
-    current = name;
-    renderSections(); renderList();
+    current = name; currentSub = ""; limit = PAGE;
+    renderSections(); renderSubs(); renderList();
     if (push) history.pushState(null, "", name ? "#s=" + encodeURIComponent(name) : location.pathname);
     if (name) document.querySelector(".listhead").scrollIntoView({ behavior: "smooth", block: "start" });
   }
   $("clear").onclick = () => { qEl.value = ""; setSection(""); };
-  qEl.addEventListener("input", renderList);
+  let qTimer;
+  qEl.addEventListener("input", () => { clearTimeout(qTimer); qTimer = setTimeout(() => { limit = PAGE; renderList(); }, 150); });
 
   // ---------- Viewer ----------
   const viewer = $("viewer"), vbody = $("vbody");
@@ -333,13 +379,25 @@
   }
   async function openViewer(f, push = true) {
     $("vtitle").textContent = f.title;
-    const dl = $("vdl"); dl.href = f.url; dl.setAttribute("download", f.file);
+    const dl = $("vdl"); dl.href = dlUrl(f);
+    if (f.local) dl.setAttribute("download", f.title + ".pdf"); else dl.removeAttribute("download");
     viewer.classList.add("open"); document.body.style.overflow = "hidden";
-    if (push) history.pushState(null, "", "#f=" + encodeURIComponent(f.path));
+    if (push) history.pushState(null, "", "#f=" + encodeURIComponent(f.key_));
+    doc = null; token++;
+    $("zin").parentElement.style.visibility = f.local ? "" : "hidden";
+    if (!f.local) {
+      vbody.className = "vbody frame";
+      vbody.innerHTML = "";
+      const fr = document.createElement("iframe");
+      fr.src = viewUrl(f); fr.title = f.title; fr.allow = "fullscreen";
+      vbody.appendChild(fr);
+      return;
+    }
+    vbody.className = "vbody";
     vbody.innerHTML = '<div class="vstatus">جارٍ فتح الملف…</div>';
     scale = 1;
     try {
-      doc = await pdfjsLib.getDocument({ url: f.url, isEvalSupported: false }).promise;
+      doc = await pdfjsLib.getDocument({ url: f.local, isEvalSupported: false }).promise;
       await renderPages();
     } catch (e) {
       vbody.innerHTML = '<div class="vstatus">تعذّر عرض الملف هنا. يمكنك تحميله بزر «تحميل».</div>';
@@ -357,7 +415,7 @@
   function fromHash() {
     const h = decodeURIComponent(location.hash.slice(1));
     if (h.startsWith("f=")) {
-      const f = files.find(x => x.path === h.slice(2));
+      const f = files.find(x => x.key_ === h.slice(2));
       if (f) return openViewer(f, false);
     }
     if (viewer.classList.contains("open")) closeViewer();
@@ -367,38 +425,33 @@
   window.addEventListener("popstate", fromHash);
 
   // ---------- Data ----------
-  async function loadPaths() {
+  const getJSON = (u, fallback) => fetch(u, { cache: "no-cache" }).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
+  async function loadUploads() {
     try {
       const r = await fetch(`https://api.github.com/repos/${REPO}/git/trees/main?recursive=1`, { cache: "no-cache" });
       if (!r.ok) throw 0;
       const d = await r.json();
       return d.tree.filter(x => x.type === "blob" && x.path.startsWith("files/")).map(x => ({ path: x.path.slice(6), size: x.size }));
-    } catch (e) {
-      const r = await fetch("files.json", { cache: "no-cache" });
-      return r.json();
-    }
-  }
-  async function loadSections() {
-    try { const r = await fetch("sections.json", { cache: "no-cache" }); return r.ok ? r.json() : []; }
-    catch (e) { return []; }
+    } catch (e) { return getJSON("files.json", []); }
   }
 
-  Promise.all([loadPaths(), loadSections()]).then(([paths, secs]) => {
-    files = paths.filter(p => /\.pdf$/i.test(p.path)).map(p => {
-      const parts = p.path.split("/");
-      const file = parts.pop();
-      return {
-        path: p.path, file, size: p.size,
-        section: parts[0] || OTHER,
-        title: toTitle(file),
-        url: "files/" + enc(p.path)
-      };
-    }).sort((a, b) => a.title.localeCompare(b.title, "ar"));
-    // الأقسام المعرّفة أولًا، ثم أي مجلد جديد يُضاف لاحقًا
+  Promise.all([getJSON("data/library.json", { files: [] }), loadUploads(), getJSON("sections.json", [])])
+  .then(([lib, uploads, secs]) => {
+    const fromLib = lib.files.map(x => ({
+      title: x.t, section: x.s, sub: x.u || "", size: x.z, id: x.id, key: x.k,
+      local: x.r || null, key_: x.id
+    }));
+    const fromUploads = uploads.filter(p => /\.pdf$/i.test(p.path)).map(p => {
+      const parts = p.path.split("/"); const file = parts.pop();
+      return { title: toTitle(file), section: parts[0] || OTHER, sub: parts.slice(1).join(" / "),
+               size: p.size, local: "files/" + enc(p.path), key_: p.path };
+    });
+    files = [...fromUploads, ...fromLib];
+    for (const f of files) f.n = norm(f.title + " " + f.section + " " + f.sub);
     sections = secs.map(s => ({ ...s }));
-    const folders = [...new Set(paths.map(p => p.path.split("/")).filter(a => a.length > 1).map(a => a[0]))];
-    for (const name of [...folders, ...(files.some(f => f.section === OTHER) ? [OTHER] : [])])
+    for (const name of new Set(files.map(f => f.section)))
       if (!sections.some(s => s.name === name)) sections.push({ name });
+    sections = sections.filter(s => files.some(f => f.section === s.name));
     renderSections(); renderList(); fromHash();
   }).catch(() => { listEl.innerHTML = '<li class="empty">تعذّر تحميل قائمة الملفات. حاول تحديث الصفحة.</li>'; });
 </script>
