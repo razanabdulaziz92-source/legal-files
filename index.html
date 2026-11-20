@@ -123,6 +123,14 @@
     content: ""; position: absolute; top: 0; left: 0; width: 12px; height: 12px;
     background: linear-gradient(225deg, transparent 50%, var(--line) 50%); border-bottom-right-radius: 3px;
   }
+  .cover {
+    flex: none; width: 72px; height: 98px; border-radius: 6px; overflow: hidden; cursor: pointer;
+    background: #fff; border: 1px solid var(--line);
+    box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 6px 14px rgba(40,30,10,.14);
+    transition: transform .15s ease, box-shadow .15s ease; padding: 0;
+  }
+  .cover:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 2px 4px rgba(0,0,0,.1), 0 10px 22px rgba(40,30,10,.2); }
+  .cover img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
   .meta { flex: 1; min-width: 0; }
   .name { font-weight: 500; overflow-wrap: anywhere; line-height: 1.5; }
   .info { color: var(--muted); font-size: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -146,6 +154,7 @@
     .sections { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .sec { padding: 14px; }
     .item { flex-wrap: wrap; }
+    .cover { width: 60px; height: 82px; }
     .actions { width: 100%; }
     .actions .btn { flex: 1; }
   }
@@ -370,6 +379,15 @@
       add("sub", f.sub);
       add("", fmtSize(f.size));
       li.querySelector("button").onclick = () => openViewer(f);
+      if (f.local && f.key_ && !f.key_.includes("/")) {
+        const cv = document.createElement("button");
+        cv.type = "button"; cv.className = "cover"; cv.setAttribute("aria-label", "عرض " + f.title);
+        const im = new Image(); im.loading = "lazy"; im.decoding = "async"; im.alt = "";
+        im.src = "thumbs/" + encodeURIComponent(f.key_) + ".jpg";
+        cv.appendChild(im); cv.onclick = () => openViewer(f);
+        const doc = li.querySelector(".doc"); doc.replaceWith(cv);
+        im.onerror = () => cv.replaceWith(doc);
+      }
       const a = li.querySelector("a");
       a.href = dlUrl(f);
       if (f.local) a.setAttribute("download", f.title + ".pdf");
